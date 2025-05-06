@@ -139,7 +139,10 @@ example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   by_contra h1
   apply h
   use a
-
+  intro x
+  apply le_of_not_gt
+  intro h2
+  apply h1 ⟨ x, h2 ⟩
 
 
 
@@ -153,7 +156,10 @@ example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   exact h
 
 example (h : ¬Monotone f) : ∃ x y, x ≤ y ∧ f y < f x := by
-  sorry
+  rw [Monotone] at h
+  push_neg at h
+  exact h
+
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   contrapose! h
