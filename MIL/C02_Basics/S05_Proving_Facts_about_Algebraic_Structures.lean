@@ -36,22 +36,67 @@ variable (x y z : α)
 #check (sup_le : x ≤ z → y ≤ z → x ⊔ y ≤ z)
 
 example : x ⊓ y = y ⊓ x := by
-  sorry
+  apply le_antisymm
+  repeat
+    apply le_inf
+    apply inf_le_right
+    apply inf_le_left
+
 
 example : x ⊓ y ⊓ z = x ⊓ (y ⊓ z) := by
-  sorry
+  apply le_antisymm
+  apply le_inf
+  · apply le_trans
+    apply inf_le_left
+    apply inf_le_left
+  · apply le_inf
+    · apply le_trans
+      apply inf_le_left
+      apply inf_le_right
+    · apply inf_le_right
+  · apply le_inf
+    · apply le_inf
+      apply inf_le_left
+      apply le_trans
+      apply inf_le_right
+      apply inf_le_left
+    · apply le_trans
+      apply inf_le_right
+      apply inf_le_right
 
 example : x ⊔ y = y ⊔ x := by
-  sorry
+  apply le_antisymm
+  repeat
+  · apply sup_le
+    · apply le_sup_right
+    · apply le_sup_left
 
 example : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := by
-  sorry
+  apply le_antisymm
+  · apply sup_le
+    · apply sup_le
+      · apply le_sup_left
+      · apply le_trans le_sup_left le_sup_right
+    · apply le_trans le_sup_right le_sup_right
+  · apply sup_le
+    · apply le_trans le_sup_left le_sup_left
+    · apply sup_le
+      · apply le_trans le_sup_right le_sup_left
+      · apply le_sup_right
 
 theorem absorb1 : x ⊓ (x ⊔ y) = x := by
-  sorry
+  apply le_antisymm
+  · apply inf_le_left
+  · apply le_inf
+    · apply le_refl
+    · apply le_sup_left
 
 theorem absorb2 : x ⊔ x ⊓ y = x := by
-  sorry
+  apply le_antisymm
+  · apply sup_le
+    · apply le_refl
+    · apply inf_le_left
+  · apply le_sup_left
 
 end
 
@@ -69,11 +114,22 @@ section
 variable {α : Type*} [Lattice α]
 variable (a b c : α)
 
-example (h : ∀ x y z : α, x ⊓ (y ⊔ z) = x ⊓ y ⊔ x ⊓ z) : a ⊔ b ⊓ c = (a ⊔ b) ⊓ (a ⊔ c) := by
-  sorry
+example (h : ∀ x y z : α, x ⊓ (y ⊔ z) = x ⊓ y ⊔ x ⊓ z) :
+  a ⊔ b ⊓ c = (a ⊔ b) ⊓ (a ⊔ c) := by
+  rw [h]
+  rw [inf_comm (a ⊔ b) a, inf_comm (a ⊔ b) c]
+  rw [absorb1]
+  rw [h]
+  rw [← sup_assoc]
+  rw [inf_comm c a, absorb2]
+  rw [inf_comm c b]
 
-example (h : ∀ x y z : α, x ⊔ y ⊓ z = (x ⊔ y) ⊓ (x ⊔ z)) : a ⊓ (b ⊔ c) = a ⊓ b ⊔ a ⊓ c := by
-  sorry
+example (h : ∀ x y z : α, x ⊔ y ⊓ z = (x ⊔ y) ⊓ (x ⊔ z)) :
+  a ⊓ (b ⊔ c) = a ⊓ b ⊔ a ⊓ c := by
+  rw [h]
+  rw [sup_comm _ a, absorb2]
+  rw [sup_comm (a ⊓ b) c, h, ← inf_assoc, sup_comm c a, absorb1]
+  rw [sup_comm]
 
 end
 
@@ -86,14 +142,24 @@ variable (a b c : R)
 
 #check (mul_nonneg : 0 ≤ a → 0 ≤ b → 0 ≤ a * b)
 
-example (h : a ≤ b) : 0 ≤ b - a := by
-  sorry
+theorem aux1 (h : a ≤ b) : 0 ≤ b - a := by
+  rw [← sub_self a, sub_eq_add_neg, sub_eq_add_neg]
+  rw [add_comm a, add_comm b]
+  apply add_le_add_left h
 
-example (h: 0 ≤ b - a) : a ≤ b := by
-  sorry
+
+theorem aux2 (h: 0 ≤ b - a) : a ≤ b := by
+  rw [← add_zero a, ← sub_add_cancel b a, add_comm (b-a)]
+  apply add_le_add_left
+  exact h
 
 example (h : a ≤ b) (h' : 0 ≤ c) : a * c ≤ b * c := by
-  sorry
+  have h1 : 0 ≤ (b - a) * c := by
+    apply aux1 at h
+    apply mul_nonneg h h'
+  rw [sub_mul] at h1
+  apply aux2 at h1
+  exact h1
 
 end
 
@@ -106,7 +172,9 @@ variable (x y z : X)
 #check (dist_triangle x y z : dist x z ≤ dist x y + dist y z)
 
 example (x y : X) : 0 ≤ dist x y := by
-  sorry
+  have : 0 ≤ dist x y + dist y x := by
+    rw [← dist_self x]
+    apply dist_triangle
+  linarith [dist_comm x y]
 
 end
-
