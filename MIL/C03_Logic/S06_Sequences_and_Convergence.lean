@@ -35,7 +35,27 @@ theorem convergesTo_add {s t : ℕ → ℝ} {a b : ℝ}
   rcases cs (ε / 2) ε2pos with ⟨Ns, hs⟩
   rcases ct (ε / 2) ε2pos with ⟨Nt, ht⟩
   use max Ns Nt
-  sorry
+  intro x
+  intro h1
+  have h2 : x ≥ Ns := le_of_max_le_left h1
+  have h3 : x ≥ Nt := le_of_max_le_right h1
+
+  calc
+    |s x + t x - (a + b)| = |(s x - a) + (t x - b)| := by
+      congr
+      ring
+    _ ≤  |s x - a| + |t x - b| := by
+      apply abs_add (s x - a) (t x - b)
+    _ < ε/2 + ε/2 := by
+      apply add_lt_add
+      apply hs
+      apply h2
+      apply ht
+      apply h3
+    _ = ε := by norm_num
+
+
+
 
 theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : ConvergesTo s a) :
     ConvergesTo (fun n ↦ c * s n) (c * a) := by
@@ -46,7 +66,32 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : Conver
     rw [h]
     ring
   have acpos : 0 < |c| := abs_pos.mpr h
-  sorry
+  intro ε εpos
+  dsimp
+  have εcpos : 0 < ε / |c| := by apply div_pos εpos acpos
+  rcases cs (ε / |c|) εcpos with ⟨Ns, hs⟩
+  use Ns
+  intro x hx
+  calc
+    |c * s x - c * a| = |c * ( s x - a )| := by
+      congr
+      ring
+    _ = |c| * |s x - a| := by
+      apply abs_mul c (s x - a)
+    _ < |c| *  (ε / |c|) := by
+      apply mul_lt_mul_of_pos_left
+      apply hs
+      apply hx
+      apply abs_pos.mpr
+      apply h
+    _ = ε := by
+      rw [mul_div_cancel₀]
+      intro h2
+      apply h
+      apply abs_eq_zero.mp
+      exact h2
+
+
 
 theorem exists_abs_le_of_convergesTo {s : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) :
     ∃ N b, ∀ n, N ≤ n → |s n| < b := by
@@ -100,4 +145,3 @@ def ConvergesTo' (s : α → ℝ) (a : ℝ) :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
 
 end
-
